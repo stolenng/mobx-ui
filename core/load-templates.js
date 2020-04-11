@@ -1,10 +1,10 @@
-import {Attributes} from "../common/common";
+import {Attributes, libraryPrefix} from "../common/common";
 import {mobContext} from "./context";
 
 const loadedTemplates = {};
 const inProcessRequests = {};
 
-export const loadTemplates = async (domElem, contextValues) => {
+export const loadTemplates = async ({domElem, contextValues, customValues}) => {
     const templates = domElem ? domElem.querySelectorAll(Attributes.withBrackets(Attributes.Template)) : document.querySelectorAll(Attributes.withBrackets(Attributes.Template));
 
     for (let template of templates) {
@@ -14,15 +14,23 @@ export const loadTemplates = async (domElem, contextValues) => {
             const templatePath = template.getAttribute(Attributes.Template);
 
             const templateDom = await fetchTemplate(templatePath)
-            invokeUiBlocks(template, templateDom, contextValues);
+            invokeUiBlocks(template, templateDom, contextValues, customValues);
         }
     }
 }
 
-const invokeUiBlocks = (template, templateDom, contextValues) => {
+const invokeUiBlocks = (template, templateDom, contextValues, customValues) => {
     const newElem = document.createElement('div');
     newElem.innerHTML = templateDom;
     template.appendChild(newElem);
+
+    const templateParams = [];
+    for (const attr of template.attributes) {
+        if (attr.name.includes(Attributes.Param)) {
+            templateParams.push({name: attr.name, value: attr.value});
+        }
+    }
+    console.log(templateParams)
 
     const uiBlocks = document.querySelectorAll(Attributes.withBrackets(Attributes.Block));
     uiBlocks.forEach(blockElem => {
@@ -34,12 +42,18 @@ const invokeUiBlocks = (template, templateDom, contextValues) => {
             if (isPartOfRepeatTemplate) {
                 const blockKey = blockElem.closest(Attributes.withBrackets(Attributes.RepeatItem)).getAttribute(Attributes.RepeatItemKey);
                 const newRepeatBlockKey = `${blockName}-${blockKey}`;
-                blockElem.setAttribute(Attributes.RepeatBlock, newRepeatBlockKey)
-                mobContext.uiBlocks[blockName].invoke(contextValues, newRepeatBlockKey);
-                template.setAttribute(Attributes.Loaded, true);
 
+
+                // to avoid rendering list items and let it decide when to render
+                if (blockKey) {
+                    blockElem.setAttribute(Attributes.RepeatBlock, newRepeatBlockKey)
+                    mobContext.uiBlocks[blockName].invoke({injectedParams: contextValues, customName: newRepeatBlockKey});
+                    template.setAttribute(Attributes.Loaded, true);
+                } else {
+                    console.warn(`[${libraryPrefix}] - missing ${blockName} key`);
+                }
             } else {
-                mobContext.uiBlocks[blockName].invoke(contextValues);
+                mobContext.uiBlocks[blockName].invoke({injectedParams: contextValues});
                 template.setAttribute(Attributes.Loaded, true);
 
             }

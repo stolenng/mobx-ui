@@ -1,13 +1,12 @@
 import {observable} from "mobx";
-import {defineUiBlock} from "../core/ui-block";
+import {createUiBlock} from "../core/ui-block";
 import {loadTemplates} from "../core/load-templates";
-import './params-page/params-page';
 
 const fakeRequest = () => {
     return Promise.resolve("MADE FAKER REQUEST");
 }
 
-defineUiBlock(`our-box`, async() => {
+createUiBlock(`our-box`, async() => {
     const test = observable({id: 'cool', name: 'yolo'});
     const stringBind = observable.box('OMG NICE EXAMPLE');
     const checkBoxBind = observable.box(true);
@@ -25,6 +24,10 @@ defineUiBlock(`our-box`, async() => {
             name: 3
         }
     ]);
+
+    //lazy loading
+    await import('./params-page/params-page');
+
 
     const initalData= await fakeRequest();
 
@@ -66,4 +69,6 @@ defineUiBlock(`our-box`, async() => {
     }
 });
 
-loadTemplates();
+loadTemplates({
+    domElem: document.body
+});

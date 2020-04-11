@@ -2,8 +2,8 @@ import {observe} from "mobx";
 
 export const watchValue = (items, valueToWatch, fn) => {
     try {
-        return observe(items[valueToWatch], fn);
+        return valueToWatch ? observe(items[valueToWatch], fn) : observe(items, fn);
     } catch (e) {
-        console.error(`[${libraryPrefix}-error] Missing value in returned object!, defineUiBlock should return ${valueToWatch}`, e);
+        console.error(`[${libraryPrefix}-error] Missing value in returned object!, defineUiBlock should return ${valueToWatch || items}`, e);
     }
 };

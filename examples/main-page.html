@@ -6,10 +6,16 @@
     <div mob-bind="stringBind"></div>
     <div mob-bind="fakeData"></div>
     <div mob-repeat="items">
-        <div mob-repeat-item mob-click="remove(item)">
+        <div mob-repeat-item>
             <span>Id: {item.id}</span>
             <span>Name: {item.name}</span>
-            <template stringBind mob-params="test" mob-template="./params-page.html"></template>
+            <template
+                    mob-click="remove(item)"
+                    mob-param-id="item.id"
+                    mob-param-name="item.name"
+                    mob-param-item="item"
+                    mob-template="./params-page.html"
+            ></template>
         </div>
     </div>
     <div>

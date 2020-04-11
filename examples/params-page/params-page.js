@@ -1,8 +1,8 @@
-import {defineUiBlock} from "../../core/ui-block";
+import {createUiBlock} from "../../core/ui-block";
 import {observable} from "mobx";
 
-defineUiBlock('params-page', (injectedParams) => {
-   console.log(injectedParams);
+createUiBlock('params-page', (injectedParams) => {
+   // console.log(injectedParams, 'injectedParams');
 
    const test = observable.box('OMFG');
 

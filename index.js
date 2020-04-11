@@ -3,10 +3,9 @@ import './examples/main-page';
 
 
 /* Pieces ToDO:
-- Function to extract from {}  var name
-- Function to extract value from context with dots test.something.something
-- Function to replace text
-
+- PASS PARAMS WHEN LOADING TEMPLATES
+- IMPROVE REPEAT TO RENDER PROPERLY BY KEY
+- DISPOSE WHEN ELEMENT DIES ?
 * */
 
 

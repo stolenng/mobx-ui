@@ -89,12 +89,18 @@ export const libraryPrefix = `mob`;
 export const getLibraryEventName = (eventName) => `${libraryPrefix}-${eventName}`;
 
 export const Attributes = {
-  Template: `${libraryPrefix}-template`,
-  Loaded: `${libraryPrefix}-loaded`,
-  Block: `${libraryPrefix}-block`,
-  Ready: `${libraryPrefix}-ready`,
-  RepeatItem: `${libraryPrefix}-repeat-item`,
-  RepeatItemKey: `${libraryPrefix}-repeat-item-key`,
-  RepeatBlock: `${libraryPrefix}-repeat-block`,
-  withBrackets: (attrName) => `[${attrName}]`
+    Template: `${libraryPrefix}-template`,
+    Loaded: `${libraryPrefix}-loaded`,
+    Block: `${libraryPrefix}-block`,
+    Bind: `${libraryPrefix}-bind`,
+    Ready: `${libraryPrefix}-ready`,
+    Repeat: `${libraryPrefix}-repeat`,
+    RepeatKey: `${libraryPrefix}-repeat-key`,
+    RepeatItem: `${libraryPrefix}-repeat-item`,
+    RepeatItemKey: `${libraryPrefix}-repeat-item-key`,
+    RepeatBlock: `${libraryPrefix}-repeat-block`,
+    InitialValue: `${libraryPrefix}-init-value`,
+    Param: `${libraryPrefix}-param`,
+    withBrackets: (attrName) => `[${attrName}]`,
+    withBracketsValue: (attrName, attrValue) => `[${attrName}="${attrValue}"]`
 };

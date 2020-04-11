@@ -23,10 +23,12 @@ export const checkIfParamsInStringFunctionString = (functionString, contextValue
     const hasParams = variablesList.length > 0;
     const params = [];
 
+
     variablesList.forEach(varName => {
         const foundValue = paramExtractor ? paramExtractor(contextValues) : extractVariableFromDottedString(varName, contextValues);
         params.push(foundValue);
     });
+
 
     return {
         params,
@@ -86,10 +88,20 @@ export const getInjectedText = (text, items) => {
         text = text.replace(`{${result}}`, itemToShow);
     });
 
-    const initialVariabliesName = results.map(result => result.split('.')[0]);
+    const initialValuablesName = results.map(result => result.split('.')[0]);
 
     return {
-        variableNames: initialVariabliesName,
+        variableNames: initialValuablesName,
         text: text
+    }
+}
+
+
+export const getPropertyNameByInputType = (inputType) => {
+    switch (inputType) {
+        case 'checkbox':
+            return 'checked'
+        default:
+            return 'value';
     }
 }
