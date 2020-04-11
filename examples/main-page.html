@@ -1,0 +1,19 @@
+<div mob-block="our-box">
+    <input type="text" mob-input="setTest" mob-init-value="test.name">
+    <input type="text" mob-input="setTest(test.id, test.name)" mob-init-value="test.id">
+    <input type="checkbox" mob-init-value="checkBoxBind.value" mob-change="toggleCheckbox">
+    <div mob-bind>{test.id} - {test.name}</div>
+    <div mob-bind="stringBind"></div>
+    <div mob-bind="fakeData"></div>
+    <div mob-repeat="items">
+        <div mob-repeat-item mob-click="remove(item)">
+            <span>Id: {item.id}</span>
+            <span>Name: {item.name}</span>
+            <template stringBind mob-params="test" mob-template="./params-page.html"></template>
+        </div>
+    </div>
+    <div>
+        <button mob-click="pushItem">Push</button>
+        <button mob-click="alertMe">Pop </button>
+    </div>
+</div>
