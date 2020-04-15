@@ -50,12 +50,18 @@ createUiBlock(`our-box`, async() => {
     const toggleCheckbox = () => checkBoxBind.set(!checkBoxBind.value);
 
     const pushItem = () => items.push({id: Date.now(), name: 'OMG'});
+    const updateFirst=  () => items[0].id = Date.now();
 
-    setInterval(() => {
-        // items.push({id: Date.now(), name: 'OMFG'})
-    }, 500);
+    // setInterval(() => {
+    //     items.push({id: Date.now()+items.length, name: 'OMFG'})
+    // }, 2000);
+    //
+    // // setInterval(() => {
+    // //     items[0].name = Date.now()+' YAY';
+    // // }, 500);
 
     return {
+        updateFirst,
         toggleCheckbox,
         remove,
         checkBoxBind,

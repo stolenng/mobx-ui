@@ -1,4 +1,6 @@
 import {observe} from "mobx";
+import {libraryPrefix} from "./common";
+
 
 export const watchValue = (items, valueToWatch, fn) => {
     try {

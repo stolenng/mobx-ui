@@ -23,18 +23,18 @@ export const checkIfParamsInStringFunctionString = (functionString, contextValue
     const hasParams = variablesList.length > 0;
     const params = [];
 
-
     variablesList.forEach(varName => {
         const foundValue = paramExtractor ? paramExtractor(contextValues) : extractVariableFromDottedString(varName, contextValues);
         params.push(foundValue);
     });
-
 
     return {
         params,
         hasParams
     }
 }
+
+export const getFunctionNameFromString = (functionString) => functionString.split('(')[0];
 
 export const getVariableInCurlyBracelets = (valueString, items) => {
     const stater = valueString.split('.')[0];
@@ -105,3 +105,14 @@ export const getPropertyNameByInputType = (inputType) => {
             return 'value';
     }
 }
+
+export const eventDisposer = ({observersToDispose, elemEvents}) => {
+    return () => {
+        console.log(`removed ${observersToDispose.length} mobx observers, and ${elemEvents.length} dom event hanlders`)
+        observersToDispose.forEach(dispose => dispose());
+
+        elemEvents.forEach(elemEvent => {
+            elemEvent.elem.removeEventListener(elemEvent.eventType, elemEvent.fn)
+        });
+    };
+};

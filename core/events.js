@@ -1,11 +1,11 @@
 import {Attributes, eventList, getLibraryEventName, libraryPrefix} from "../common/common";
-import {checkIfParamsInStringFunctionString} from "../common/helpers";
+import {checkIfParamsInStringFunctionString, getFunctionNameFromString} from "../common/helpers";
 
 export const createEventCall = ({eventName, domElem, contextValues, customValues, paramExtractor}) => {
     return (e) => {
         const usedValues = customValues ? customValues : contextValues;
         const functionString = domElem.getAttribute(getLibraryEventName(eventName));
-        const funcName = functionString.split('(')[0];
+        const funcName = getFunctionNameFromString(functionString);
         const {hasParams, params} = checkIfParamsInStringFunctionString(functionString, usedValues, paramExtractor);
         try {
             if (hasParams) {
@@ -20,6 +20,8 @@ export const createEventCall = ({eventName, domElem, contextValues, customValues
 };
 
 export const bindEventHandlers = ({domElem, contextValues, customValues, customParamExtractor, elemEvents}) => {
+    const tempElemEvents = [];
+
     eventList.forEach(eventName => {
         const models = domElem.querySelectorAll(Attributes.withBrackets(getLibraryEventName(eventName)));
 
@@ -28,11 +30,15 @@ export const bindEventHandlers = ({domElem, contextValues, customValues, customP
             const newEventHandler = createEventCall({eventName, domElem, contextValues, paramExtractor, customValues});
             domElem.addEventListener(eventName, newEventHandler);
 
-            elemEvents.push({
+            const elemEvent = {
                 eventType: eventName,
                 fn: newEventHandler,
                 elem: domElem
-            });
+            };
+            elemEvents.push(elemEvent);
+            tempElemEvents.push(elemEvent);
         });
     });
+
+    return tempElemEvents;
 };

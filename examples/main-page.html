@@ -5,7 +5,24 @@
     <div mob-bind>{test.id} - {test.name}</div>
     <div mob-bind="stringBind"></div>
     <div mob-bind="fakeData"></div>
+    <br>
+    <label for="">REPEAT WITHOUT KEY</label>
     <div mob-repeat="items">
+        <div mob-repeat-item>
+            <span>Id: {item.id}</span>
+            <span>Name: {item.name}</span>
+            <template
+                    mob-click="remove(item)"
+                    mob-param-id="item.id"
+                    mob-param-name="item.name"
+                    mob-param-item="item"
+                    mob-template="./params-page.html"
+            ></template>
+        </div>
+    </div>
+    <br>
+    <label for="">REPEAT WITH KEY</label>
+    <div mob-repeat="items" mob-repeat-key="id">
         <div mob-repeat-item>
             <span>Id: {item.id}</span>
             <span>Name: {item.name}</span>
@@ -21,5 +38,6 @@
     <div>
         <button mob-click="pushItem">Push</button>
         <button mob-click="alertMe">Pop </button>
+        <button mob-click="updateFirst">Update first </button>
     </div>
 </div>

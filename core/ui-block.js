@@ -1,9 +1,8 @@
-import {Attributes, libraryPrefix} from "../common/common";
+import {Attributes} from "../common/common";
 import {bindEventHandlers} from "./events";
 import {
-    getInjectedValuesInText,
+    eventDisposer,
 } from "../common/helpers";
-import {observe} from "mobx";
 import {mobContext} from "./context";
 import {loadTemplates} from "./load-templates";
 import {injectInitialValues} from "./initial-values";
@@ -58,13 +57,5 @@ export const createUiBlock = async (name, fn, options) => {
 
     console.timeEnd(`takeByAttrAll-` + (customName || name))
 
-
-    return () => {
-        observersToDispose.forEach(observer => observer());
-
-        elemEvents.forEach(elemEvent => {
-            elemEvent.elem.removeEventListener(elemEvent.eventType, elemEvent.fn)
-        });
-    }
-
+    return eventDisposer({elemEvents, observersToDispose});
 };
