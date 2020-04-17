@@ -10,10 +10,11 @@
   },
   "author": "Georgy Glezer",
   "license": "MIT",
-  "dependencies": {
-    "mobx": "^5.15.4"
+  "peerDependencies": {
+    "mobx": "*"
   },
   "devDependencies": {
+    "mobx": "^5.15.4",
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
     "copy-webpack-plugin": "^5.1.1",

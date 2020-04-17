@@ -1,6 +1,6 @@
 import {observable} from "mobx";
 import {createUiBlock} from "../core/ui-block";
-import {loadTemplates} from "../core/load-templates";
+import {templates} from "../core/templates";
 
 const fakeRequest = () => {
     return Promise.resolve("MADE FAKER REQUEST");
@@ -75,6 +75,6 @@ createUiBlock(`our-box`, async() => {
     }
 });
 
-loadTemplates({
+templates({
     domElem: document.body
 });

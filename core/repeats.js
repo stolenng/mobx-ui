@@ -1,10 +1,11 @@
 import {Attributes} from "../common/common";
-import {eventDisposer, getInjectedValuesInText} from "../common/helpers";
-import {loadTemplates} from "./load-templates";
+import {eventDisposer, getInjectedValuesInText, updateElementAttributesByItem} from "../common/helpers";
+import {templates} from "./templates";
 import {bindEventHandlers} from "./events";
 import {watchValue} from "../common/mobx-helpers";
 
-export const attachRepeats = async ({domElem, contextValues, observersToDispose, elemEvents}) => {
+export const attachRepeats = async ({domElem, contextValues, observersToDispose}) => {
+    const elemEvents = [];
     const repeats = domElem.querySelectorAll(Attributes.withBrackets(Attributes.Repeat));
 
     repeats.forEach(repeatFatherElem => {
@@ -24,65 +25,61 @@ export const attachRepeats = async ({domElem, contextValues, observersToDispose,
             elemEvents
         });
     });
-}
 
-const customParamExtractorCaller = (repeatVariableKey) => {
+    return [elemEvents];
+};
+
+const customParamExtractor = (repeatVariableKey) => {
     return (domElem) => {
         const key = domElem.closest(Attributes.withBrackets(Attributes.RepeatItemKey)).getAttribute(Attributes.RepeatItemKey);
-        return (currentValues) => repeatVariableKey ? currentValues.find(item => item[repeatVariableKey] === key) : currentValues[key];
-    };
-}
+        return (currentValues) => {
+            if (Array.isArray(currentValues)) {
+                return repeatVariableKey ? currentValues.find(item => item[repeatVariableKey] === key) : currentValues[key];
+            }
 
-const startRepeating = async ({repeatFatherElem, template, contextValues, repeatVariableName, repeatVariableKey, observersToDispose, elemEvents}) => {
+            return currentValues;
+        }
+    };
+};
+
+const startRepeating = async ({repeatFatherElem, template, contextValues, repeatVariableName, repeatVariableKey}) => {
     // reset event handlers
     let eventToDisposeHandler;
 
     if (!repeatVariableKey) {
         eventToDisposeHandler = removeItemsPhase(repeatFatherElem)
     }
-    const tempObserverEvents = [];
-    let tempElemEvents;
 
-    const customParamExtractor = customParamExtractorCaller(repeatVariableKey)
+    const elemEvents = [], observersToDispose = [];
 
-    const handleRepeatItem = handleRepeatItemIterator({
+    const _customParamExtractor = customParamExtractor(repeatVariableKey);
+
+    const _handleRepeatItem = handleRepeatItem({
         repeatFatherElem,
         template,
         repeatVariableKey,
         contextValues,
-        elemEvents,
-        customParamExtractor,
-        tempObserverEvents,
-        observersToDispose
+        customParamExtractor: _customParamExtractor
     });
 
-    const promiseTemplateIsReadyToLoad = [];
-    contextValues[repeatVariableName].forEach((item, index) => promiseTemplateIsReadyToLoad.push(handleRepeatItem(item, index)));
 
-    await Promise.all(promiseTemplateIsReadyToLoad);
-
-    await loadTemplates({
-        contextValues,
-        domElem: repeatFatherElem,
-        customValues: contextValues[repeatVariableName]
+    const [allItemsElemEvents, allItemsObserverDispoers] = await handleAllRepeatItems({
+        repeatList: contextValues[repeatVariableName],
+        handleRepeatItem: _handleRepeatItem
     });
 
-    tempElemEvents = bindEventHandlers({
-        elemEvents,
-        domElem: repeatFatherElem,
-        contextValues,
-        customValues: contextValues[repeatVariableName],
-        customParamExtractor
-    });
+    elemEvents.push(...allItemsElemEvents);
+    observersToDispose.push(...allItemsObserverDispoers);
 
     // list
     const listObserver = watchValue(contextValues, repeatVariableName, change => {
         if (!repeatVariableKey) {
             const removeOldEvents = eventToDisposeHandler({
-                observersToDispose: tempObserverEvents,
-                elemEvents: tempElemEvents
+                observersToDispose,
+                elemEvents
             });
             removeOldEvents();
+
             startRepeating({
                 repeatFatherElem,
                 template,
@@ -93,74 +90,111 @@ const startRepeating = async ({repeatFatherElem, template, contextValues, repeat
                 elemEvents
             });
         } else {
-            const newItem = change.added[0];
-            console.log(newItem);
-            handleRepeatItem(newItem);
+            if (change.removed.length) {
+                change.removed.forEach(removedItem => {
+                    const removedChild = document.body.querySelector(Attributes.withBracketsValue(Attributes.RepeatItemKey, removedItem[repeatVariableKey]));
+                    repeatFatherElem.removeChild(removedChild);
+                });
+            } else if (change.added.length) {
+                change.added.forEach(newItem => {
+                    _handleRepeatItem(newItem);
+                });
+            }
         }
     });
 
     observersToDispose.push(listObserver);
-    tempObserverEvents.push(listObserver);
+
+    return [elemEvents, observersToDispose];
 };
 
-const handleRepeatItemIterator = ({repeatFatherElem, template, customParamExtractor, elemEvents, contextValues, repeatVariableKey, tempObserverEvents, observersToDispose}) => {
+const handleAllRepeatItems = async ({repeatList, handleRepeatItem}) => {
+    const elemEvents = [], observersToDispose = [];
+    const promiseTemplateIsReadyToLoad = [];
+
+    repeatList.forEach((item, index) => {
+        const currentPromise = handleRepeatItem(item, index).then(([deadEvents, deadObservers]) => {
+            elemEvents.push(...deadEvents);
+            observersToDispose.push(...deadObservers);
+        });
+
+        promiseTemplateIsReadyToLoad.push(currentPromise)
+    });
+
+    await Promise.all(promiseTemplateIsReadyToLoad);
+
+    return [elemEvents, observersToDispose];
+};
+
+const handleRepeatItem = ({repeatFatherElem, template, customParamExtractor, contextValues, repeatVariableKey}) => {
+    const observersToDispose = [], elemEvents = [];
+
     return async (item, index) => {
         const tempDom = template.cloneNode(true);
-        tempDom.setAttribute(Attributes.RepeatItemKey, repeatVariableKey ? item[repeatVariableKey] : index)
+        tempDom.setAttribute(Attributes.RepeatItemKey, repeatVariableKey ? item[repeatVariableKey] : index);
 
-        await updateDomElem({
+        const _handleDomItem = handleDomItem({
             domToUpdate: tempDom,
             contextValues,
+            repeatFatherElem,
             template,
-            item
+            item,
+            customParamExtractor
         });
 
-        repeatFatherElem.appendChild(tempDom);
+        const _updateElem = async () => {
+            const [deadElement] = await _handleDomItem();
+            elemEvents.push(...deadElement);
+        };
+
+        await _updateElem();
 
         const elemObserver = watchValue(item, null, async () => {
-            await updateDomElem({
-                item,
-                template,
-                elemEvents,
-                contextValues,
-                customParamExtractor,
-                domToUpdate: tempDom,
-                options: {
-                    shouldLoadTemplates: true,
-                    shouldBindEvents: true
-                }
-            })
+            await _updateElem();
         });
 
-        tempObserverEvents.push(elemObserver);
         observersToDispose.push(elemObserver);
+
+        return [elemEvents, observersToDispose];
     }
 };
 
-const updateDomElem = async ({item, template, contextValues, customParamExtractor, domToUpdate, elemEvents, options}) => {
-    const {shouldLoadTemplates, shouldBindEvents} = options || {};
-    domToUpdate.innerHTML = getInjectedValuesInText(template.innerHTML, item);
+const handleDomItem = ({item, repeatFatherElem, template, contextValues, customParamExtractor, domToUpdate: domElem}) => {
+    const elemEvents = [];
 
-    if (shouldLoadTemplates) {
-        await loadTemplates({
+    return async () => {
+        domElem.innerHTML = getInjectedValuesInText(template.innerHTML, item);
+
+        // appends child so we can render template right away
+        // if already appended don't again :D
+        if (domElem.parentElement === null) {
+            repeatFatherElem.appendChild(domElem);
+        }
+
+        //render templates of repeates
+        await templates({
             contextValues,
-            domElem: domToUpdate,
+            domElem,
             customValues: item
         });
-    }
 
-    if (shouldBindEvents) {
-        bindEventHandlers({
+        //bind event handlers
+        elemEvents.push(...bindEventHandlers({
+            domElem,
             elemEvents,
-            domElem: domToUpdate,
             contextValues,
             customValues: item,
             customParamExtractor
-        });
-    }
+        }));
 
-    const attrKeys = Object.keys(domToUpdate.attributes);
-    attrKeys.forEach(attrKey => domToUpdate.attributes[attrKey].value = getInjectedValuesInText(domToUpdate.attributes[attrKey].value, item));
+        //update attributes
+        updateElementAttributesByItem({
+            domElement: domElem,
+            item
+        });
+
+        return [elemEvents];
+    }
 };
 
 const removeItemsPhase = (repeatFatherElem) => {
