@@ -1,11 +1,11 @@
 import {Attributes, libraryPrefix} from "../common/common";
 import {mobContext} from "./context";
-import {extractVariableFromDottedString, getInjectedValuesInText, getVariableInCurlyBracelets} from "../common/helpers";
+import {extractVariableFromDottedString} from "../common/helpers";
 
 const loadedTemplates = {};
 const inProcessRequests = {};
 
-export const templates = async ({domElem, contextValues, customValues}) => {
+export const renderTemplates = async ({domElem, contextValues, customValues}) => {
     let templates = domElem ? domElem.querySelectorAll(Attributes.withBrackets(Attributes.Template)) : document.querySelectorAll(Attributes.withBrackets(Attributes.Template));
 
     for (let template of templates) {

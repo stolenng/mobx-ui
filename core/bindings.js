@@ -2,7 +2,8 @@ import {Attributes} from "../common/common";
 import {getInjectedText} from "../common/helpers";
 import {watchValue} from "../common/mobx-helpers";
 
-export const attachBindings = ({domElem, contextValues, observersToDispose}) => {
+export const attachBindings = ({domElem, contextValues}) => {
+    const observersToDispose = [];
     const binds = domElem.querySelectorAll(Attributes.withBrackets(Attributes.Bind));
 
     binds.forEach(domElem => {
@@ -14,6 +15,8 @@ export const attachBindings = ({domElem, contextValues, observersToDispose}) => 
             bindSingleValue({domElem, valueToBind, contextValues, observersToDispose});
         }
     });
+
+    return observersToDispose;
 };
 
 const bindSingleValue = ({domElem, valueToBind, contextValues, observersToDispose}) => {
@@ -22,7 +25,7 @@ const bindSingleValue = ({domElem, valueToBind, contextValues, observersToDispos
     }));
 
     domElem.textContent = contextValues[valueToBind];
-}
+};
 
 const bindMultipleValues = ({domElem, contextValues, observersToDispose}) => {
     const template = domElem.innerHTML;
@@ -33,7 +36,7 @@ const bindMultipleValues = ({domElem, contextValues, observersToDispose}) => {
             const {text} = getInjectedText(template, contextValues);
             domElem.textContent = text;
         }));
-    })
+    });
 
     domElem.textContent = text;
-}
+};

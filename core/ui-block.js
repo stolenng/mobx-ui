@@ -4,7 +4,7 @@ import {
     eventDisposer,
 } from "../common/helpers";
 import {mobContext} from "./context";
-import {templates} from "./templates";
+import {renderTemplates} from "./templates";
 import {injectInitialValues} from "./initial-values";
 import {attachBindings} from "./bindings";
 import {attachRepeats} from "./repeats";
@@ -18,7 +18,6 @@ export const createUiBlock = async (name, fn, options) => {
         domElem = document.querySelector(Attributes.withBracketsValue(Attributes.RepeatBlock, (customName || name)));
     } else {
         domElem = document.querySelector(Attributes.withBracketsValue(Attributes.Block, (customName || name)));
-
     }
 
     if (!domElem) {
@@ -30,30 +29,41 @@ export const createUiBlock = async (name, fn, options) => {
     }
 
     const observersToDispose = [], elemEvents = [];
-
     const contextValues = await fn(injectedParams);
 
     //set block ready - move to bottom
     domElem.setAttribute(Attributes.Ready, 'true');
 
     //load if any tempaltes
-    await templates({domElem, contextValues});
+    await renderTemplates({domElem, contextValues});
 
     // bind all event handlers
-    bindEventHandlers({
-        domElem: domElem,
-        contextValues,
-        elemEvents
-    });
+    elemEvents.push(
+        ...bindEventHandlers({
+            domElem: domElem,
+            contextValues,
+            elemEvents
+        })
+    );
 
     // injects initial values
     injectInitialValues({domElem, contextValues});
 
     //attach bindings
-    attachBindings({domElem, contextValues, observersToDispose});
+    observersToDispose.push(
+        ...attachBindings({domElem, contextValues, observersToDispose})
+    );
 
     // attach repeats
-    await attachRepeats({domElem, contextValues, observersToDispose, elemEvents});
+    await attachRepeats({
+        domElem,
+        contextValues,
+        observersToDispose,
+        elemEvents
+    }).then(([tempElemEvents, tempObserversDisposers]) => {
+        elemEvents.push(...tempElemEvents);
+        tempObserversDisposers.push(...tempObserversDisposers);
+    });
 
     console.timeEnd(`takeByAttrAll-` + (customName || name))
 

@@ -1,32 +1,32 @@
 import {Attributes} from "../common/common";
 import {eventDisposer, getInjectedValuesInText, updateElementAttributesByItem} from "../common/helpers";
-import {templates} from "./templates";
+import {renderTemplates} from "./templates";
 import {bindEventHandlers} from "./events";
 import {watchValue} from "../common/mobx-helpers";
 
-export const attachRepeats = async ({domElem, contextValues, observersToDispose}) => {
-    const elemEvents = [];
-    const repeats = domElem.querySelectorAll(Attributes.withBrackets(Attributes.Repeat));
+export const attachRepeats = async ({domElem, contextValues}) => {
+    const repeats = domElem.querySelectorAll(Attributes.withBrackets(Attributes.Repeat)), elemEvents = [], observersToDispose = [];
 
-    repeats.forEach(repeatFatherElem => {
+    for (const repeatFatherElem of repeats) {
         const repeatVariableName = repeatFatherElem.getAttribute(Attributes.Repeat);
         const repeatVariableKey = repeatFatherElem.getAttribute(Attributes.RepeatKey);
         const template = repeatFatherElem.querySelector(Attributes.withBrackets(Attributes.RepeatItem));
 
         repeatFatherElem.removeChild(template);
 
-        startRepeating({
+        const [tempElemEvents, tempObserversDisposers] = await startRepeating({
             repeatFatherElem,
             template,
             contextValues,
             repeatVariableName,
-            repeatVariableKey,
-            observersToDispose,
-            elemEvents
+            repeatVariableKey
         });
-    });
 
-    return [elemEvents];
+        elemEvents.push(...tempElemEvents);
+        tempObserversDisposers.push(...tempObserversDisposers);
+    }
+
+    return [elemEvents, observersToDispose];
 };
 
 const customParamExtractor = (repeatVariableKey) => {
@@ -61,7 +61,6 @@ const startRepeating = async ({repeatFatherElem, template, contextValues, repeat
         contextValues,
         customParamExtractor: _customParamExtractor
     });
-
 
     const [allItemsElemEvents, allItemsObserverDispoers] = await handleAllRepeatItems({
         repeatList: contextValues[repeatVariableName],
@@ -171,8 +170,8 @@ const handleDomItem = ({item, repeatFatherElem, template, contextValues, customP
             repeatFatherElem.appendChild(domElem);
         }
 
-        //render templates of repeates
-        await templates({
+        //render renderTemplates of repeates
+        await renderTemplates({
             contextValues,
             domElem,
             customValues: item

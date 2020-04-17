@@ -19,8 +19,8 @@ export const createEventCall = ({eventName, domElem, contextValues, customValues
     }
 };
 
-export const bindEventHandlers = ({domElem, contextValues, customValues, customParamExtractor, elemEvents}) => {
-    const tempElemEvents = [];
+export const bindEventHandlers = ({domElem, contextValues, customValues, customParamExtractor}) => {
+    const elemEvents = [];
 
     eventList.forEach(eventName => {
         const models = domElem.querySelectorAll(Attributes.withBrackets(getLibraryEventName(eventName)));
@@ -36,9 +36,8 @@ export const bindEventHandlers = ({domElem, contextValues, customValues, customP
                 elem: domElem
             };
             elemEvents.push(elemEvent);
-            tempElemEvents.push(elemEvent);
         });
     });
 
-    return tempElemEvents;
+    return elemEvents;
 };
