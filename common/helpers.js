@@ -24,7 +24,7 @@ export const checkIfParamsInStringFunctionString = (functionString, contextValue
     const params = [];
 
     variablesList.forEach(varName => {
-        const foundValue = paramExtractor ? paramExtractor(contextValues) : extractVariableFromDottedString(varName, contextValues);
+        const foundValue = paramExtractor ? paramExtractor(contextValues, varName) : extractVariableFromDottedString(varName, contextValues);
         params.push(foundValue);
     });
 
@@ -85,7 +85,7 @@ export const getInjectedValuesInText = (text, item) => {
     }
 
     results.forEach(result => {
-        const itemToShow = extractVariableFromDottedString(result, {item});
+        const itemToShow = result.indexOf('.') === -1 ? item[result] : extractVariableFromDottedString(result, {item});
 
         text = text.replace(`{${result}}`, `${JSON.stringify(itemToShow)}`);
     })

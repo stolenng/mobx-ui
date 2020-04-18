@@ -44,10 +44,11 @@ createUiBlock(`our-box`, async() => {
     console.log(deepItem)
 
     const alertMe = (e) => console.log(e, test.value);
-    const remove = (e, item) => {
-        items.splice(items.indexOf(item), 1)
+    const remove = (e, index) => {
+        console.log(e, index)
+        items.splice(index, 1)
     };
-    const setTest = (e, id, name) => {
+    const setTest = (e, id, name, index) => {
         if (id && name) {
             test.id = e.target.value;
             test.name = name;

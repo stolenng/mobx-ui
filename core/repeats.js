@@ -32,9 +32,16 @@ export const attachRepeats = async ({domElem, contextValues}) => {
 const customParamExtractor = (repeatVariableKey) => {
     return (domElem) => {
         const key = domElem.closest(Attributes.withBrackets(Attributes.RepeatItemKey)).getAttribute(Attributes.RepeatItemKey);
-        return (currentValues) => {
+        return (currentValues, varName) => {
             if (Array.isArray(currentValues)) {
                 return repeatVariableKey ? currentValues.find(item => item[repeatVariableKey] === key) : currentValues[key];
+            }
+            if (varName.includes('$index')) {
+                return currentValues.$index;
+            }
+
+            if (currentValues.$index) {
+                delete currentValues.$index;
             }
 
             return currentValues;
@@ -91,7 +98,7 @@ const startRepeating = async ({repeatFatherElem, template, contextValues, repeat
         } else {
             if (change.removed.length) {
                 change.removed.forEach(removedItem => {
-                    const removedChild = document.body.querySelector(Attributes.withBracketsValue(Attributes.RepeatItemKey, removedItem[repeatVariableKey]));
+                    const removedChild = repeatFatherElem.querySelector(Attributes.withBracketsValue(Attributes.RepeatItemKey, removedItem[repeatVariableKey]));
                     repeatFatherElem.removeChild(removedChild);
                 });
             } else if (change.added.length) {
@@ -136,7 +143,7 @@ const handleRepeatItem = ({repeatFatherElem, template, customParamExtractor, con
             contextValues,
             repeatFatherElem,
             template,
-            item,
+            item: {...item, $index: index},
             customParamExtractor
         });
 
