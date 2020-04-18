@@ -7,6 +7,7 @@ export const createEventCall = ({eventName, domElem, contextValues, customValues
         const functionString = domElem.getAttribute(getLibraryEventName(eventName));
         const funcName = getFunctionNameFromString(functionString);
         const {hasParams, params} = checkIfParamsInStringFunctionString(functionString, usedValues, paramExtractor);
+        debugger;
         try {
             if (hasParams) {
                 contextValues[funcName](e, ...params);

@@ -3,6 +3,7 @@ import {eventDisposer, getInjectedValuesInText, updateElementAttributesByItem} f
 import {renderTemplates} from "./templates";
 import {bindEventHandlers} from "./events";
 import {watchValue} from "../common/mobx-helpers";
+import {attachAttributes} from "./attributes";
 
 export const attachRepeats = async ({domElem, contextValues}) => {
     const repeats = domElem.querySelectorAll(Attributes.withBrackets(Attributes.Repeat)), elemEvents = [], observersToDispose = [];
@@ -191,6 +192,9 @@ const handleDomItem = ({item, repeatFatherElem, template, contextValues, customP
             customValues: item,
             customParamExtractor
         }));
+
+        //attach attributes
+        attachAttributes({domElem, contextValues});
 
         //update attributes
         updateElementAttributesByItem({

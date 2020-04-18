@@ -2,7 +2,7 @@
     <input type="text" mob-on-input="setTest" mob-init-value="test.name">
     <input type="text" mob-on-input="setTest(test.id, test.name)" mob-init-value="test.id">
     <input type="checkbox" mob-init-value="checkBoxBind.value" mob-on-change="toggleCheckbox">
-    <div mob-class="" mob-bind>{test.id} - {test.name}</div>
+    <div mob-bind>{test.id} - {test.name}</div>
     <div mob-bind="stringBind"></div>
     <div mob-bind="fakeData"></div>
     <input type="text" mob-on-input="setDeepItem" mob-init-value="deepItem.item.item.id">
@@ -10,6 +10,7 @@
     <div mob-bind>{deepItem.item.item.id} TFI</div>
     <div mob-bind>{getText(deepItem.item.item.id, deepItem.item)}</div>
     <br>
+            <img mob-src="onePieceImage" alt="">
     <label for="">REPEAT WITHOUT KEY</label>
     <div mob-repeat="items">
         <div mob-repeat-item>
@@ -18,7 +19,7 @@
             <span>Index: {$index}</span>
 
             <template
-                    mob-on-click="remove($index)"
+                    mob-on-click="remove($index, test)"
                     mob-param-id="item.id"
                     mob-param-name="item.name"
                     mob-param-item="item"
@@ -34,7 +35,7 @@
             <span>Name: {item.name}</span>
             <span>Index: {$index}</span>
             <template
-                    mob-on-click="remove(item)"
+                    mob-on-click="remove(item, test)"
                     mob-param-id="item.id"
                     mob-param-name="item.name"
                     mob-param-item="item"

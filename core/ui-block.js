@@ -8,6 +8,7 @@ import {renderTemplates} from "./templates";
 import {injectInitialValues} from "./initial-values";
 import {attachBindings} from "./bindings";
 import {attachRepeats} from "./repeats";
+import {attachAttributes} from "./attributes";
 
 export const createUiBlock = async (name, fn, options = {}) => {
     const {injectedParams, blockId} = options;
@@ -39,6 +40,9 @@ export const createUiBlock = async (name, fn, options = {}) => {
             elemEvents
         })
     );
+
+    //attach attributes
+    observersToDispose.push(...attachAttributes({domElem, contextValues}));
 
     // injects initial values
     injectInitialValues({domElem, contextValues});

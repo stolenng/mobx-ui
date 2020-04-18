@@ -3,7 +3,9 @@ import {createUiBlock} from './core/ui-block';
 import {initUiBlocks} from './core/templates';
 
 /* Pieces ToDO:
-- repeat $index
+- fix global scope + current item scope passing or agree that if u want global scope just use function because u have access from there !
+
+- function to single bindings + attrs
 - attributes binding
 - DISPOSE WHEN ELEMENT DIES - MUTATION OBSERVER WHEN DEAD REMOVE ALL WATCHERS
 - duplicate kyes in repeat alert
