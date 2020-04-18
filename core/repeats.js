@@ -131,7 +131,6 @@ const handleRepeatItem = ({repeatFatherElem, template, customParamExtractor, con
     return async (item, index) => {
         const tempDom = template.cloneNode(true);
         tempDom.setAttribute(Attributes.RepeatItemKey, repeatVariableKey ? item[repeatVariableKey] : index);
-
         const _handleDomItem = handleDomItem({
             domToUpdate: tempDom,
             contextValues,

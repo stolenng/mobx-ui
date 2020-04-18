@@ -98,7 +98,7 @@ export const Attributes = {
     RepeatKey: `${libraryPrefix}-repeat-key`,
     RepeatItem: `${libraryPrefix}-repeat-item`,
     RepeatItemKey: `${libraryPrefix}-repeat-item-key`,
-    RepeatBlock: `${libraryPrefix}-repeat-block`,
+    RepeatBlockId: `${libraryPrefix}-repeat-block-id`,
     InitialValue: `${libraryPrefix}-init-value`,
     Param: `${libraryPrefix}-param`,
     withBrackets: (attrName) => `[${attrName}]`,

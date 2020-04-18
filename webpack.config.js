@@ -1,6 +1,15 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 
+const plugins = [
+    new CopyPlugin([
+        {from: './index.html', to: './'},
+        {from: './examples/main-page.html', to: './'},
+        {from: './examples/params-page/params-page.html', to: './'}
+        // { from: '/style.css', to: './' },
+    ]),
+];
+
 module.exports = {
     entry: './index.js',
     mode: 'development',
@@ -11,12 +20,5 @@ module.exports = {
     devServer: {
         contentBase: './dist'
     },
-    plugins: [
-        new CopyPlugin([
-            { from: './index.html', to: './' },
-            { from: './examples/main-page.html', to: './'},
-            { from: './examples/params-page/params-page.html', to: './'}
-            // { from: '/style.css', to: './' },
-        ]),
-    ],
+    plugins
 };

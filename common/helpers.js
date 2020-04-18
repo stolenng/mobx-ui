@@ -108,12 +108,9 @@ export const getPropertyNameByInputType = (inputType) => {
 
 export const eventDisposer = ({observersToDispose, elemEvents}) => {
     return () => {
-        console.log(`removed ${observersToDispose.length} mobx observers, and ${elemEvents.length} dom event hanlders`)
         observersToDispose.forEach(dispose => dispose());
 
-        console.log('filtering disposer empty arrasys for now!', elemEvents.length)
         elemEvents = elemEvents.filter(elemEvent => !Array.isArray(elemEvent));
-        console.log('filtering disposer empty arrasy for now!', elemEvents.length)
 
         elemEvents.forEach(elemEvent => {
             elemEvent.elem.removeEventListener(elemEvent.eventType, elemEvent.fn)
@@ -125,3 +122,15 @@ export const updateElementAttributesByItem = ({domElement, item}) => {
     const attrKeys = Object.keys(domElement.attributes);
     attrKeys.forEach(attrKey => domElement.attributes[attrKey].value = getInjectedValuesInText(domElement.attributes[attrKey].value, item));
 };
+
+
+export const generateId = () => {
+    function chr4(){
+        return Math.random().toString(16).slice(-4);
+    }
+    return chr4() + chr4() +
+        '-' + chr4() +
+        '-' + chr4() +
+        '-' + chr4() +
+        '-' + chr4() + chr4() + chr4();
+}

@@ -1,6 +1,6 @@
-import {Attributes, libraryPrefix} from "../common/common";
+import {Attributes} from "../common/common";
 import {mobContext} from "./context";
-import {extractVariableFromDottedString} from "../common/helpers";
+import {extractVariableFromDottedString, generateId} from "../common/helpers";
 
 const loadedTemplates = {};
 const inProcessRequests = {};
@@ -13,78 +13,54 @@ export const renderTemplates = async ({domElem, contextValues, customValues}) =>
         // if we have custom values its mob-repeat
         const isTemplateInRepeat = Boolean(template.closest(Attributes.withBrackets(Attributes.Repeat)));
         const shouldRenderTemplateOfRepeat = isTemplateInRepeat && Boolean(customValues);
-        console.log('temp close', template.closest(Attributes.withBrackets(Attributes.Repeat)), Attributes.withBrackets(Attributes.Repeat), customValues)
+        const templatePath = template.getAttribute(Attributes.Template);
+        const templateDom = await fetchTemplate(templatePath);
 
-        console.log(isLoaded, shouldRenderTemplateOfRepeat, isTemplateInRepeat)
         if (shouldRenderTemplateOfRepeat) {
-            const itemKeyValue = template.closest(Attributes.withBrackets(Attributes.RepeatItemKey)).getAttribute(Attributes.RepeatItemKey);
-            const itemKeyName =  template.closest(Attributes.withBrackets(Attributes.Repeat)).getAttribute(Attributes.RepeatKey);
-            let currentItem = customValues;
-            if (itemKeyName && Array.isArray(customValues)) {
-                currentItem = customValues.find(item => item.id == itemKeyValue);
-            } else if (Array.isArray(customValues)) {
-                currentItem = customValues[parseInt(itemKeyValue)];
-            }
-            const templatePath = template.getAttribute(Attributes.Template);
-
-            const templateDom = await fetchTemplate(templatePath)
-            invokeUiBlocks(template, templateDom, contextValues, currentItem);
+            await handleRepeatItemTemplate({template, customValues, contextValues});
         } else {
             if (!isLoaded && !isTemplateInRepeat) {
-                console.log(template, 'rendering!')
-                const templatePath = template.getAttribute(Attributes.Template);
-
-                const templateDom = await fetchTemplate(templatePath)
-                invokeUiBlocks(template, templateDom, contextValues, customValues);
+                await invokeUiBlocks(template, templateDom, contextValues, customValues);
             }
         }
     }
 }
 
-const invokeUiBlocks = (template, templateDom, contextValues, customValues) => {
+const handleRepeatItemTemplate = async ({template, templateDom, customValues, contextValues}) => {
+    const itemKeyValue = template.closest(Attributes.withBrackets(Attributes.RepeatItemKey)).getAttribute(Attributes.RepeatItemKey);
+    const itemKeyName = template.closest(Attributes.withBrackets(Attributes.Repeat)).getAttribute(Attributes.RepeatKey);
+    let currentItem = customValues;
+    if (itemKeyName && Array.isArray(customValues)) {
+        currentItem = customValues.find(item => item.id == itemKeyValue);
+    } else if (Array.isArray(customValues)) {
+        currentItem = customValues[parseInt(itemKeyValue)];
+    }
+
+    await invokeUiBlocks(template, templateDom, contextValues, currentItem);
+};
+
+const invokeUiBlocks = async (template, templateDom, contextValues, customValues) => {
     const newElem = document.createElement('div');
     newElem.innerHTML = templateDom;
     template.appendChild(newElem);
 
-    const templateParams = {};
-    for (const attr of template.attributes) {
-        if (attr.name.includes(Attributes.Param)) {
-            const valueToInsert = extractVariableFromDottedString(attr.value, customValues ? {item: customValues} : contextValues)
-            templateParams[attr.name.replace(Attributes.Param+'-', '')] = valueToInsert;
-        }
-    }
-    console.log(templateParams)
-
+    const templateParams = getTemplateParams({
+        template,
+        valuesToExtract: customValues ? {item: customValues} : contextValues
+    });
 
     const uiBlocks = document.querySelectorAll(Attributes.withBrackets(Attributes.Block));
-    uiBlocks.forEach(blockElem => {
+
+    for (const blockElem of uiBlocks) {
         const blockName = blockElem.getAttribute(Attributes.Block);
 
         if (blockElem.getAttribute(Attributes.Ready) !== 'true') {
-            const isPartOfRepeatTemplate = blockElem.closest(Attributes.withBrackets(Attributes.RepeatItem));
-
-            if (isPartOfRepeatTemplate) {
-                const blockKey = blockElem.closest(Attributes.withBrackets(Attributes.RepeatItem)).getAttribute(Attributes.RepeatItemKey);
-                const newRepeatBlockKey = `${blockName}-${blockKey}`;
-
-                // to avoid rendering list items and let it decide when to render
-                if (blockKey) {
-                    blockElem.setAttribute(Attributes.RepeatBlock, newRepeatBlockKey)
-                    mobContext.uiBlocks[blockName].invoke({
-                        injectedParams: templateParams,
-                        customName: newRepeatBlockKey
-                    });
-                    template.setAttribute(Attributes.Loaded, true);
-                } else {
-                    console.warn(`[${libraryPrefix}] - missing ${blockName} key`);
-                }
-            } else {
-                mobContext.uiBlocks[blockName].invoke({injectedParams: templateParams});
-                template.setAttribute(Attributes.Loaded, true);
-
-            }
+            const blockId = `${blockName}-${generateId()}`;
+            blockElem.setAttribute(Attributes.RepeatBlockId, blockId)
+            await mobContext.uiBlocks[blockName].invoke({blockId, injectedParams: templateParams});
+            template.setAttribute(Attributes.Loaded, true);
         }
-    });
+    }
     template.style.display = 'block';
 };
 
@@ -117,4 +93,18 @@ const fetchTemplate = (templatePath) => {
     inProcessRequests[templatePath] = currentPromise;
 
     return currentPromise;
+}
+
+
+const getTemplateParams = ({template, valuesToExtract}) => {
+    const templateParams = {};
+
+    for (const attr of template.attributes) {
+        if (attr.name.includes(Attributes.Param)) {
+            const valueToInsert = extractVariableFromDottedString(attr.value, valuesToExtract)
+            templateParams[attr.name.replace(Attributes.Param + '-', '')] = valueToInsert;
+        }
+    }
+
+    return templateParams;
 }

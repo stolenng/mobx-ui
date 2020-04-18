@@ -9,16 +9,10 @@ import {injectInitialValues} from "./initial-values";
 import {attachBindings} from "./bindings";
 import {attachRepeats} from "./repeats";
 
-export const createUiBlock = async (name, fn, options) => {
-    const {injectedParams, customName} = options || {};
-    console.time(`takeByAttrAll-` + (customName || name))
-    let domElem;
-
-    if (customName) {
-        domElem = document.querySelector(Attributes.withBracketsValue(Attributes.RepeatBlock, (customName || name)));
-    } else {
-        domElem = document.querySelector(Attributes.withBracketsValue(Attributes.Block, (customName || name)));
-    }
+export const createUiBlock = async (name, fn, options = {}) => {
+    const {injectedParams, blockId} = options;
+    // console.time(`takeByAttrAll-` + (blockId || name))
+    let domElem =  document.querySelector(Attributes.withBracketsValue(Attributes.RepeatBlockId, (blockId || name)));
 
     if (!domElem) {
         mobContext.uiBlocks[name] = {
@@ -65,7 +59,7 @@ export const createUiBlock = async (name, fn, options) => {
         tempObserversDisposers.push(...tempObserversDisposers);
     });
 
-    console.timeEnd(`takeByAttrAll-` + (customName || name))
+    // console.timeEnd(`takeByAttrAll-` + (blockId || name))
 
     return eventDisposer({elemEvents, observersToDispose});
 };
