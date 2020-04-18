@@ -1,4 +1,4 @@
-import {bindingRegex, functionParamsRegex} from "./common";
+import {bindingRegex, functionParamsRegex, libraryPrefix} from "./common";
 
 export const extractVariableFromDottedString = (varName, items) => {
     const split = varName.split('.');
@@ -18,7 +18,7 @@ export const checkIfParamsInStringFunctionString = (functionString, contextValue
         functionString,
         functionParamsRegex,
         (results) => results.length ? results[0].split(',') : []
-    );
+    ).filter(Boolean);
 
     const hasParams = variablesList.length > 0;
     const params = [];
@@ -37,12 +37,27 @@ export const checkIfParamsInStringFunctionString = (functionString, contextValue
 export const getFunctionNameFromString = (functionString) => functionString.split('(')[0];
 
 export const getVariableInCurlyBracelets = (valueString, items) => {
-    const stater = valueString.split('.')[0];
-    const query = valueString.split('.').splice(1);
-    let itemToShow = items[valueString] ? items[valueString] : items[stater];
-    query.forEach(entry => {
-        itemToShow = itemToShow[entry.toString()];
-    });
+    const isFunction = valueString.indexOf('(') !== -1;
+    let itemToShow;
+
+    if (!isFunction) {
+        const stater = valueString.split('.')[0];
+        const query = valueString.split('.').splice(1);
+        itemToShow = items[valueString] ? items[valueString] : items[stater];
+        query.forEach(entry => {
+            itemToShow = itemToShow[entry.toString()];
+        });
+    } else {
+        // handle func
+        const funcName = getFunctionNameFromString(valueString);
+        const {hasParams, params} = checkIfParamsInStringFunctionString(valueString, items, null);
+
+        if (hasParams) {
+            itemToShow = items[funcName](...params);
+        } else {
+            itemToShow = items[funcName]();
+        }
+    }
 
     return itemToShow;
 }
@@ -78,20 +93,40 @@ export const getInjectedValuesInText = (text, item) => {
     return text;
 };
 
-
 export const getInjectedText = (text, items) => {
     const results = getVariablesListFromText(text);
 
     results.forEach(result => {
         const itemToShow = getVariableInCurlyBracelets(result, items);
 
+        if (result.indexOf('(') !== -1) {
+            result = result.replace (',', ', ');
+        }
+
         text = text.replace(`{${result}}`, itemToShow);
     });
 
-    const initialValuablesName = results.map(result => result.split('.')[0]);
+    const fullVariableNames = results.map(result => result.split('.')[0]);
+    let functionParams = [];
+
+    for (const result of results) {
+        if (result.indexOf('(') !== -1 ) {
+            const splitString = result.split('(');
+
+            splitString.splice(0, 1);
+
+            functionParams.push(
+                ...splitString.join().replace(')', '').split(',')
+            )
+        }
+    }
+
+    functionParams = functionParams.filter(Boolean);
 
     return {
-        variableNames: initialValuablesName,
+        functionParams,
+        variableNames: fullVariableNames,
+        originalNames: results,
         text: text
     }
 }
@@ -125,12 +160,15 @@ export const updateElementAttributesByItem = ({domElement, item}) => {
 
 
 export const generateId = () => {
-    function chr4(){
+    function chr4() {
         return Math.random().toString(16).slice(-4);
     }
+
     return chr4() + chr4() +
         '-' + chr4() +
         '-' + chr4() +
         '-' + chr4() +
         '-' + chr4() + chr4() + chr4();
 }
+
+export const isFunction = (text) => text.includes('(') === true || text.includes(')') === true;

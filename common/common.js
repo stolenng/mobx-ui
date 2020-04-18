@@ -86,7 +86,7 @@ export const bindingRegex = new RegExp('{(.*?)}');
 export const functionParamsRegex = new RegExp('\\((.*?)\\)');
 export const libraryPrefix = `mob`;
 
-export const getLibraryEventName = (eventName) => `${libraryPrefix}-${eventName}`;
+export const getLibraryEventName = (eventName) => `${libraryPrefix}-on-${eventName}`;
 
 export const Attributes = {
     Template: `${libraryPrefix}-template`,

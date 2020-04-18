@@ -59,6 +59,10 @@ export const createUiBlock = async (name, fn, options = {}) => {
         tempObserversDisposers.push(...tempObserversDisposers);
     });
 
+    if (contextValues.afterRender && typeof contextValues.afterRender === 'function') {
+        contextValues.afterRender();
+    }
+
     // console.timeEnd(`takeByAttrAll-` + (blockId || name))
 
     return eventDisposer({elemEvents, observersToDispose});

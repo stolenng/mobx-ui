@@ -5,6 +5,10 @@ import {extractVariableFromDottedString, generateId} from "../common/helpers";
 const loadedTemplates = {};
 const inProcessRequests = {};
 
+export const initUiBlocks = ({domElem} = {}) => {
+    renderTemplates({domElem});
+}
+
 export const renderTemplates = async ({domElem, contextValues, customValues}) => {
     let templates = domElem ? domElem.querySelectorAll(Attributes.withBrackets(Attributes.Template)) : document.querySelectorAll(Attributes.withBrackets(Attributes.Template));
 
@@ -17,7 +21,7 @@ export const renderTemplates = async ({domElem, contextValues, customValues}) =>
         const templateDom = await fetchTemplate(templatePath);
 
         if (shouldRenderTemplateOfRepeat) {
-            await handleRepeatItemTemplate({template, customValues, contextValues});
+            await handleRepeatItemTemplate({template, templateDom, customValues, contextValues});
         } else {
             if (!isLoaded && !isTemplateInRepeat) {
                 await invokeUiBlocks(template, templateDom, contextValues, customValues);
@@ -40,9 +44,8 @@ const handleRepeatItemTemplate = async ({template, templateDom, customValues, co
 };
 
 const invokeUiBlocks = async (template, templateDom, contextValues, customValues) => {
-    const newElem = document.createElement('div');
-    newElem.innerHTML = templateDom;
-    template.appendChild(newElem);
+    const html = new DOMParser().parseFromString(templateDom , 'text/html');
+    template.appendChild(html.body.firstChild);
 
     const templateParams = getTemplateParams({
         template,
@@ -77,7 +80,7 @@ const fetchTemplate = (templatePath) => {
         xhr.open('GET', templatePath, true);
         xhr.onreadystatechange = function () {
             if (this.status !== 200) {
-                reject('Failed to Fetch');
+                reject('Failed to get template !', templatePath);
             }
 
             if (this.readyState === 4) {

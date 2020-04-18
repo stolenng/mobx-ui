@@ -1,5 +1,8 @@
 import {Attributes} from "../common/common";
-import {getInjectedText} from "../common/helpers";
+import {
+    extractVariableFromDottedString,
+    getInjectedText, isFunction
+} from "../common/helpers";
 import {watchValue} from "../common/mobx-helpers";
 
 export const attachBindings = ({domElem, contextValues}) => {
@@ -10,33 +13,74 @@ export const attachBindings = ({domElem, contextValues}) => {
         let valueToBind = domElem.getAttribute(Attributes.Bind);
 
         if (!valueToBind) {
-            bindMultipleValues({domElem, contextValues, observersToDispose});
+            observersToDispose.push(...bindMultipleValues({domElem, contextValues}));
         } else {
-            bindSingleValue({domElem, valueToBind, contextValues, observersToDispose});
+            observersToDispose.push(...bindSingleValue({domElem, valueToBind, contextValues}));
         }
     });
 
     return observersToDispose;
 };
 
-const bindSingleValue = ({domElem, valueToBind, contextValues, observersToDispose}) => {
-    observersToDispose.push(watchValue(contextValues, valueToBind, change => {
-        domElem.textContent = change.newValue;
-    }));
-
-    domElem.textContent = contextValues[valueToBind];
-};
-
-const bindMultipleValues = ({domElem, contextValues, observersToDispose}) => {
+const bindMultipleValues = ({domElem, contextValues}) => {
+    const observersToDispose = [];
     const template = domElem.innerHTML;
-    const {variableNames, text} = getInjectedText(template, contextValues);
+    const getHtmlWithValues = () => getInjectedText(template, contextValues);
+    const {text, originalNames, functionParams} = getHtmlWithValues();
 
-    variableNames.forEach(varName => {
-        observersToDispose.push(watchValue(contextValues, varName, () => {
-            const {text} = getInjectedText(template, contextValues);
-            domElem.textContent = text;
-        }));
+    [...originalNames, ...functionParams].forEach(valueToBind => {
+        if (!isFunction(valueToBind)) {
+            const isDirectValue = valueToBind.indexOf('.') === -1;
+
+            if (isDirectValue) {
+                observersToDispose.push(watchValue(contextValues[valueToBind], null, change => {
+                    domElem.innerHTML = change.newValue;
+                }));
+            } else {
+                observersToDispose.push(...bindAllNodeValues({domElem, contextValues, valueToBind, getHtmlWithValues}));
+            }
+        }
     });
 
-    domElem.textContent = text;
+    domElem.innerHTML = text;
+
+    return observersToDispose;
 };
+
+const bindSingleValue = ({domElem, contextValues, valueToBind}) => {
+    const observersToDispose = [];
+    const currentValue = extractVariableFromDottedString(valueToBind, contextValues);
+    const isDirectValue = valueToBind.indexOf('.') === -1;
+
+    if (isDirectValue) {
+        observersToDispose.push(watchValue(contextValues[valueToBind], null, change => {
+            domElem.innerHTML = change.newValue;
+        }));
+    } else {
+        const splitString = valueToBind.split('.');
+        const objectFieldToWatch = splitString.splice(-1, 1);
+        const objectToWatch = extractVariableFromDottedString(splitString.join('.'), contextValues);
+
+        observersToDispose.push(watchValue(objectToWatch, null, change => {
+            domElem.innerHTML = objectToWatch[objectFieldToWatch]
+        }));
+    }
+
+    domElem.innerHTML = currentValue;
+
+    return observersToDispose;
+};
+
+const bindAllNodeValues = ({domElem, contextValues, valueToBind, getHtmlWithValues}) => {
+    const observersToDispose = [];
+    const splitString = valueToBind.split('.');
+    splitString.splice(-1, 1);
+    const objectToWatch = extractVariableFromDottedString(splitString.join('.'), contextValues);
+
+    observersToDispose.push(watchValue(objectToWatch, null, change => {
+        const {text} = getHtmlWithValues();
+        domElem.innerHTML = text;
+    }));
+
+    return observersToDispose;
+}

@@ -1,10 +1,14 @@
 <div mob-block="our-box">
-    <input type="text" mob-input="setTest" mob-init-value="test.name">
-    <input type="text" mob-input="setTest(test.id, test.name)" mob-init-value="test.id">
-    <input type="checkbox" mob-init-value="checkBoxBind.value" mob-change="toggleCheckbox">
-    <div mob-bind>{test.id} - {test.name}</div>
+    <input type="text" mob-on-input="setTest" mob-init-value="test.name">
+    <input type="text" mob-on-input="setTest(test.id, test.name)" mob-init-value="test.id">
+    <input type="checkbox" mob-init-value="checkBoxBind.value" mob-on-change="toggleCheckbox">
+    <div mob-class="" mob-bind>{test.id} - {test.name}</div>
     <div mob-bind="stringBind"></div>
     <div mob-bind="fakeData"></div>
+    <input type="text" mob-on-input="setDeepItem" mob-init-value="deepItem.item.item.id">
+    <div mob-bind="deepItem.item.item.id"></div>
+    <div mob-bind>{deepItem.item.item.id} TFI</div>
+    <div mob-bind>{getText(deepItem.item.item.id, deepItem.item)}</div>
     <br>
     <label for="">REPEAT WITHOUT KEY</label>
     <div mob-repeat="items">
@@ -12,7 +16,7 @@
             <span>Id: {item.id}</span>
             <span>Name: {item.name}</span>
             <template
-                    mob-click="remove(item)"
+                    mob-on-click="remove(item)"
                     mob-param-id="item.id"
                     mob-param-name="item.name"
                     mob-param-item="item"
@@ -27,7 +31,7 @@
             <span>Id: {item.id}</span>
             <span>Name: {item.name}</span>
             <template
-                    mob-click="remove(item)"
+                    mob-on-click="remove(item)"
                     mob-param-id="item.id"
                     mob-param-name="item.name"
                     mob-param-item="item"

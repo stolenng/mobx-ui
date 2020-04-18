@@ -1,6 +1,5 @@
 import {observable} from "mobx";
 import {createUiBlock} from "../core/ui-block";
-import {renderTemplates} from "../core/templates";
 
 const fakeRequest = () => {
     return Promise.resolve("MADE FAKER REQUEST");
@@ -24,6 +23,15 @@ createUiBlock(`our-box`, async() => {
             name: 3
         }
     ]);
+    const deepItem = observable({
+        id: 1,
+        item: {
+            id: 2,
+            item: {
+                id: 3
+            }
+        }
+    })
 
     //lazy loading
     await import('./params-page/params-page');
@@ -33,7 +41,7 @@ createUiBlock(`our-box`, async() => {
 
     const fakeData = observable.box(initalData);
 
-    console.log(items)
+    console.log(deepItem)
 
     const alertMe = (e) => console.log(e, test.value);
     const remove = (e, item) => {
@@ -51,6 +59,12 @@ createUiBlock(`our-box`, async() => {
 
     const pushItem = () => items.push({id: Date.now(), name: 'OMG'});
     const updateFirst=  () => items[0].id = Date.now();
+    const setDeepItem = (e) => {
+        deepItem.item.item.id = e.target.value;
+    }
+    const getText = () => {
+        return deepItem.item.item.id;
+    }
 
     // setInterval(() => {
     //     items.push({id: Date.now()+items.length, name: 'OMFG'})
@@ -60,7 +74,15 @@ createUiBlock(`our-box`, async() => {
     // //     items[0].name = Date.now()+' YAY';
     // // }, 500);
 
+    const afterRender = () => {
+        console.log('done rendring!')
+    }
+
     return {
+        getText,
+        setDeepItem,
+        afterRender,
+        deepItem,
         updateFirst,
         toggleCheckbox,
         remove,
@@ -73,8 +95,4 @@ createUiBlock(`our-box`, async() => {
         setTest,
         alertMe
     }
-});
-
-renderTemplates({
-    domElem: document.body
 });
