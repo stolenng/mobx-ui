@@ -7,7 +7,7 @@
   "scripts": {
     "build": "microbundle",
     "start:dev": "WEBPACK_ENV=development webpack-dev-server",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --runInBand __tests__/*.js"
   },
   "author": "Georgy Glezer",
   "license": "MIT",
@@ -17,12 +17,20 @@
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
+    "@babel/register": "^7.9.0",
+    "babel-jest": "^25.3.0",
     "copy-webpack-plugin": "^5.1.1",
+    "esm": "^3.2.25",
+    "faker": "^4.1.0",
+    "jest": "^25.3.0",
     "microbundle": "^0.11.0",
     "mobx": "^5.15.4",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.10.3"
   },
-  "files": ["dist"]
+  "files": [
+    "dist"
+  ]
 }

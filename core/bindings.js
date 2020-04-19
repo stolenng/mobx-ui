@@ -1,7 +1,7 @@
 import {Attributes} from "../common/common";
 import {
     extractVariableFromDottedString,
-    getInjectedText, isFunction
+    getInjectedText, isFunctionText
 } from "../common/helpers";
 import {watchValue} from "../common/mobx-helpers";
 
@@ -29,7 +29,7 @@ const bindMultipleValues = ({domElem, contextValues}) => {
     const {text, originalNames, functionParams} = getHtmlWithValues();
 
     [...originalNames, ...functionParams].forEach(valueToBind => {
-        if (!isFunction(valueToBind)) {
+        if (!isFunctionText(valueToBind)) {
             const isDirectValue = valueToBind.indexOf('.') === -1;
 
             if (isDirectValue) {
