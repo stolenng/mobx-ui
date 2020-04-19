@@ -30,7 +30,7 @@ export const attachRepeats = async ({domElem, contextValues}) => {
     return [elemEvents, observersToDispose];
 };
 
-const customParamExtractor = (repeatVariableKey) => {
+const customParamExtractor = (repeatVariableKey, index) => {
     return (domElem) => {
         const key = domElem.closest(Attributes.withBrackets(Attributes.RepeatItemKey)).getAttribute(Attributes.RepeatItemKey);
         return (currentValues, varName) => {
@@ -38,12 +38,9 @@ const customParamExtractor = (repeatVariableKey) => {
                 return repeatVariableKey ? currentValues.find(item => item[repeatVariableKey] === key) : currentValues[key];
             }
             if (varName.includes('$index')) {
-                return currentValues.$index;
+                return index;
             }
 
-            if (currentValues.$index) {
-                delete currentValues.$index;
-            }
 
             return currentValues;
         }
@@ -60,14 +57,11 @@ const startRepeating = async ({repeatFatherElem, template, contextValues, repeat
 
     const elemEvents = [], observersToDispose = [];
 
-    const _customParamExtractor = customParamExtractor(repeatVariableKey);
-
     const _handleRepeatItem = handleRepeatItem({
         repeatFatherElem,
         template,
         repeatVariableKey,
-        contextValues,
-        customParamExtractor: _customParamExtractor
+        contextValues
     });
 
     const [allItemsElemEvents, allItemsObserverDispoers] = await handleAllRepeatItems({
@@ -104,7 +98,7 @@ const startRepeating = async ({repeatFatherElem, template, contextValues, repeat
                 });
             } else if (change.added.length) {
                 change.added.forEach(newItem => {
-                    _handleRepeatItem(newItem);
+                    _handleRepeatItem(newItem, change.object.indexOf(newItem));
                 });
             }
         }
@@ -133,19 +127,21 @@ const handleAllRepeatItems = async ({repeatList, handleRepeatItem}) => {
     return [elemEvents, observersToDispose];
 };
 
-const handleRepeatItem = ({repeatFatherElem, template, customParamExtractor, contextValues, repeatVariableKey}) => {
+const handleRepeatItem = ({repeatFatherElem, template, contextValues, repeatVariableKey}) => {
     const observersToDispose = [], elemEvents = [];
 
     return async (item, index) => {
         const tempDom = template.cloneNode(true);
+        const _customParamExtractor = customParamExtractor(repeatVariableKey, index);
         tempDom.setAttribute(Attributes.RepeatItemKey, repeatVariableKey ? item[repeatVariableKey] : index);
         const _handleDomItem = handleDomItem({
             domToUpdate: tempDom,
             contextValues,
             repeatFatherElem,
             template,
-            item: {...item, $index: index},
-            customParamExtractor
+            index,
+            item,
+            customParamExtractor: _customParamExtractor
         });
 
         const _updateElem = async () => {
@@ -165,11 +161,11 @@ const handleRepeatItem = ({repeatFatherElem, template, customParamExtractor, con
     }
 };
 
-const handleDomItem = ({item, repeatFatherElem, template, contextValues, customParamExtractor, domToUpdate: domElem}) => {
+const handleDomItem = ({item, index, repeatFatherElem, template, contextValues, customParamExtractor, domToUpdate: domElem}) => {
     const elemEvents = [];
 
     return async () => {
-        domElem.innerHTML = getInjectedValuesInText(template.innerHTML, item);
+        domElem.innerHTML = getInjectedValuesInText(template.innerHTML, item, () => index);
 
         // appends child so we can render template right away
         // if already appended don't again :D

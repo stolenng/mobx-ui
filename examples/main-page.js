@@ -61,7 +61,9 @@ createUiBlock(`our-box`, async() => {
     const toggleCheckbox = () => checkBoxBind.set(!checkBoxBind.value);
 
     const pushItem = () => items.push({id: Date.now(), name: 'OMG'});
-    const updateFirst=  () => items[0].id = Date.now();
+    const updateFirst=  () => {
+        items[0].id = Date.now();
+    }
     const setDeepItem = (e) => {
         deepItem.item.item.id = e.target.value;
     }

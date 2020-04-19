@@ -77,7 +77,7 @@ export const getVariablesListFromText = (text, customRegex, customTransformer) =
     return customTransformer ? customTransformer(results) : results;
 };
 
-export const getInjectedValuesInText = (text, item) => {
+export const getInjectedValuesInText = (text, item, customTransformer) => {
     const results = getVariablesListFromText(text);
 
     if (!results) {
@@ -85,7 +85,13 @@ export const getInjectedValuesInText = (text, item) => {
     }
 
     results.forEach(result => {
-        const itemToShow = result.indexOf('.') === -1 ? item[result] : extractVariableFromDottedString(result, {item});
+        let itemToShow;
+
+        if (result.includes('$index')) {
+            itemToShow = customTransformer(result);
+        } else {
+             itemToShow = result.indexOf('.') === -1 ? item[result] : extractVariableFromDottedString(result, {item});
+        }
 
         text = text.replace(`{${result}}`, `${JSON.stringify(itemToShow)}`);
     })

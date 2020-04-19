@@ -4,7 +4,7 @@ import {initUiBlocks} from './core/templates';
 
 /* Pieces ToDO:
 - fix global scope + current item scope passing or agree that if u want global scope just use function because u have access from there !
-
+- bugs with ng repeat update
 - function to single bindings + attrs
 - attributes binding
 - DISPOSE WHEN ELEMENT DIES - MUTATION OBSERVER WHEN DEAD REMOVE ALL WATCHERS
