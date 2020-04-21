@@ -1,13 +1,13 @@
-import {bindingRegex, functionParamsRegex, libraryPrefix} from "./common";
+import {bindingRegex, functionParamsRegex} from "./common";
 
-export const getValueFromTextParam = ({paramName, items}) => {
-    const split = paramName.split('.');
+export const getValueFromTextParam = ({paramText, items}) => {
+    const split = paramText.split('.');
 
     if (split.length === 1) {
-        return items[paramName];
+        return items[paramText];
     }
 
-    let searchedItem =  items[split[0]];
+    let searchedItem = items[split[0]];
 
     const query = split.splice(1);
 
@@ -18,27 +18,48 @@ export const getValueFromTextParam = ({paramName, items}) => {
     return searchedItem
 };
 
-export const getParamNamesFromFunction = ({functionString}) => {
-    const variablesList = getVariablesListFromText(
-        functionString,
-        functionParamsRegex,
-        (results) => results.length ? results[0].split(',') : []
-    ).filter(Boolean);
+export const getParamValuesFromFunctionText = ({funcText, items, funcParamExtractor}) => {
+    const funcParams = getParamNamesFromFunction({funcText})
+
+    const paramValues = funcParams.map(paramText => {
+        return funcParamExtractor ? funcParamExtractor({paramText, items}) : getValueFromTextParam({
+            paramText,
+            items
+        });
+    });
+
+    return paramValues;
+};
+
+export const getValueFromFunctionText = ({funcText, items, funcParamExtractor}) => {
+    const funcName = getFunctionNameFromString(funcText);
+    const paramValues = getParamValuesFromFunctionText({funcText, items, funcParamExtractor});
+
+    if (paramValues.length > 0) {
+        return items[funcName](...paramValues);
+    } else {
+        return items[funcName]();
+    }
+};
+
+export const getParamNamesFromFunction = ({funcText}) => {
+    const variablesList = getVariablesListFromText({
+        text: funcText,
+        customRegex: functionParamsRegex,
+        customTransformer: (results) => {
+            return results.length ? results[0].split(',') : [];
+        }
+    }).filter(Boolean);
 
     return variablesList;
 };
 
 export const getParamsFromDomText = ({domText}) => {
-    const variablesList = getVariablesListFromText(domText);
+    const variablesList = getVariablesListFromText({text: domText});
     return variablesList;
 };
 
-
-export const getParamValueByName = ({paramName, item}) => {
-    const result = getValueFromTextParam({paramName, item});
-};
-
-
+// NEW AMAZING TESTED STUFF UP :D
 //OLD STUFF DOWN
 
 export const extractVariableFromDottedString = (varName, items) => {
@@ -55,11 +76,11 @@ export const extractVariableFromDottedString = (varName, items) => {
 };
 
 export const checkIfParamsInStringFunctionString = (functionString, contextValues, paramExtractor) => {
-    const variablesList = getVariablesListFromText(
-        functionString,
-        functionParamsRegex,
-        (results) => results.length ? results[0].split(',') : []
-    ).filter(Boolean);
+    const variablesList = getVariablesListFromText({
+        text: functionString,
+        customRegex: functionParamsRegex,
+        customTransformer: (results) => results.length ? results[0].split(',') : []
+    }).filter(Boolean);
 
     const hasParams = variablesList.length > 0;
     const params = [];
@@ -103,7 +124,7 @@ export const getVariableInCurlyBracelets = (valueString, items) => {
     return itemToShow;
 }
 
-export const getVariablesListFromText = (text, customRegex, customTransformer) => {
+export const getVariablesListFromText = ({text, customRegex, customTransformer}) => {
     const currentRegex = customRegex ? customRegex : bindingRegex;
     text = text.replace(/\s+/g, ''); // spaces
     const results = [];
@@ -119,7 +140,7 @@ export const getVariablesListFromText = (text, customRegex, customTransformer) =
 };
 
 export const getInjectedValuesInText = (text, item, customTransformer) => {
-    const results = getVariablesListFromText(text);
+    const results = getVariablesListFromText({text});
 
     if (!results) {
         return text;
@@ -131,7 +152,7 @@ export const getInjectedValuesInText = (text, item, customTransformer) => {
         if (result.includes('$index')) {
             itemToShow = customTransformer(result);
         } else {
-             itemToShow = result.indexOf('.') === -1 ? item[result] : extractVariableFromDottedString(result, {item});
+            itemToShow = result.indexOf('.') === -1 ? item[result] : extractVariableFromDottedString(result, {item});
         }
 
         text = text.replace(`{${result}}`, itemToShow);
@@ -141,13 +162,13 @@ export const getInjectedValuesInText = (text, item, customTransformer) => {
 };
 
 export const getInjectedText = (text, items) => {
-    const results = getVariablesListFromText(text);
+    const results = getVariablesListFromText({text});
 
     results.forEach(result => {
         const itemToShow = getVariableInCurlyBracelets(result, items);
 
         if (result.indexOf('(') !== -1) {
-            result = result.replace (',', ', ');
+            result = result.replace(',', ', ');
         }
 
         text = text.replace(`{${result}}`, itemToShow);
@@ -157,7 +178,7 @@ export const getInjectedText = (text, items) => {
     let functionParams = [];
 
     for (const result of results) {
-        if (result.indexOf('(') !== -1 ) {
+        if (result.indexOf('(') !== -1) {
             const splitString = result.split('(');
 
             splitString.splice(0, 1);

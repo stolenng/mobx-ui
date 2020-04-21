@@ -204,7 +204,7 @@ export const attributesList = [
 ];
 
 export const bindingRegex = new RegExp('{(.*?)}');
-export const functionParamsRegex = new RegExp('\\((.*?)\\)');
+export const functionParamsRegex = new RegExp('\\((.*)\\)');
 export const libraryPrefix = `mob`;
 
 export const getLibraryEventName = (eventName) => `${libraryPrefix}-on-${eventName}`;
